@@ -1,0 +1,50 @@
+.App {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+/* Global RTL adjustments */
+.App * {
+  box-sizing: border-box;
+}
+
+/* Button and interactive element adjustments for RTL */
+.App button {
+  font-family: inherit;
+}
+
+/* Table adjustments for RTL */
+.App table {
+  direction: rtl;
+}
+
+/* Form adjustments */
+.App input,
+.App textarea,
+.App select {
+  text-align: right;
+}
+
+.App input[type="number"] {
+  text-align: left;
+}
+
+/* Loading states */
+.loading-spinner {
+  border: 2px solid var(--color-muted);
+  border-top: 2px solid var(--color-primary);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

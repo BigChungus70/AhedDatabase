@@ -1,0 +1,42 @@
+* text=auto
+
+
+*.java text
+*.xml text
+*.yml text
+*.yaml text
+*.properties text
+*.json text
+*.md text
+*.txt text
+*.sh text
+*.cmd text
+
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+
+*.jar binary
+*.war binary
+*.nar binary
+*.ear binary
+*.zip binary
+*.tar binary
+*.tar.gz binary
+*.rar binary
+*.7z binary
+*.class binary
+*.dll binary
+*.exe binary
+*.so binary
+*.dylib binary
+*.p12 binary
+*.jks binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text
+*.mp4 binary
+*.mov binary

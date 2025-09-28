@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+/* Updated to proper Tailwind CSS v4 theme configuration without PostCSS */
+@theme {
+  --font-family-sans: "Cairo", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  --font-family-mono: "Fira Code", "Courier New", monospace;
+
+  /* Arabic Family Management System Colors */
+  --color-primary: #155e75; /* cyan-800 - Professional trust */
+  --color-primary-foreground: #f0f9ff; /* cyan-50 */
+  --color-secondary: #0f766e; /* teal-700 - Complementary depth */
+  --color-secondary-foreground: #f0fdfa; /* teal-50 */
+  --color-accent: #d97706; /* amber-600 - Warm attention */
+  --color-accent-foreground: #fffbeb; /* amber-50 */
+
+  /* Neutral Foundation */
+  --color-background: #ffffff;
+  --color-foreground: #0f172a; /* slate-900 */
+  --color-muted: #f8fafc; /* slate-50 */
+  --color-muted-foreground: #64748b; /* slate-500 */
+
+  /* Interactive States */
+  --color-border: #e2e8f0; /* slate-200 */
+  --color-input: #ffffff;
+  --color-ring: #155e75; /* primary */
+
+  /* Status Colors for Family Conditions */
+  --color-success: #059669; /* emerald-600 */
+  --color-warning: #d97706; /* amber-600 */
+  --color-destructive: #dc2626; /* red-600 */
+  --color-info: #0284c7; /* sky-600 */
+
+  /* Card and Surface */
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
+
+  /* Spacing and Layout */
+  --radius: 0.5rem;
+}
+
+/* RTL Support */
+html[dir="rtl"] {
+  text-align: right;
+}
+
+html[dir="rtl"] .ltr {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Arabic Typography */
+body {
+  font-family: var(--font-family-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar for RTL */
+html[dir="rtl"] ::-webkit-scrollbar {
+  width: 8px;
+}
+
+html[dir="rtl"] ::-webkit-scrollbar-track {
+  background: var(--color-muted);
+}
+
+html[dir="rtl"] ::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius);
+}
+
+html[dir="rtl"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted-foreground);
+}
+
+/* Ensure proper text rendering for Arabic */
+.arabic-text {
+  font-feature-settings: "liga" 1, "kern" 1;
+  text-rendering: optimizeLegibility;
+}
+
+/* Animation utilities */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Focus styles for accessibility */
+.focus-visible:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
