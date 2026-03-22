@@ -1,0 +1,59 @@
+services:
+  postgres-db:
+    image: postgres:choose_version
+    container_name: postgres-db
+    environment:
+      - POSTGRES_DB_FILE=/run/secrets/db_name
+      - POSTGRES_USER_FILE=/run/secrets/db_user
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+    restart: unless-stopped
+    secrets:
+      - db_name
+      - db_user
+      - db_password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+
+  backend:
+    build: ./backend
+    container_name: springboot-app
+    depends_on:
+      - postgres-db
+    expose:
+      - "PORT_EXPOSED_TO_FRONTEND"
+    env_file:
+      - ./backend/.env
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    container_name: react-nginx
+    logging:
+      driver: journald
+      options:
+        tag: "{{.Name}}"
+    ports:
+      - "PORT:INTERNAL PORT"
+    volumes:
+      - /path/to/certificate
+    networks:
+      - app-network
+
+
+secrets:
+  db_name:
+    file: ./secret/db_name.txt
+  db_user:
+    file: ./secret/db_user.txt
+  db_password:
+    file: ./secret/db_password.txt
+
+networks:
+  app-network:
+
+volumes:
+  db_data:

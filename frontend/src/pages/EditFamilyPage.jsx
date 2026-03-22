@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Plus, Save, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { familyAPI } from "../services/api";
-import { DATA_STATUS_TRANSLATIONS, FAMILY_CONDITIONS } from "../services/constants";
-import { Plus, Trash2, Save, X } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
+import {
+  AREA_MAP,
+  DATA_STATUS_TRANSLATIONS,
+  FAMILY_CONDITIONS,
+} from "../services/constants";
 
 export default function EditFamilyPage() {
   const { code } = useParams();
@@ -36,8 +40,13 @@ export default function EditFamilyPage() {
     setSaving(true);
 
     try {
-      await familyAPI.updateFamily(family);
-      toast.success("تم حفظ العائلة بنجاح", {
+      const familyToSubmit = {
+        ...family,
+        childrenCount: family.children.length ?? 0,
+      };
+
+      await familyAPI.updateFamily(familyToSubmit);
+      toast.success("تم حفظ العائلة", {
         position: "top-left",
         theme: "colored",
         closeOnClick: true,
@@ -45,7 +54,7 @@ export default function EditFamilyPage() {
         autoClose: 1500,
         closeButton: false,
       });
-      navigate("/families");
+      navigate(-1);
     } catch (error) {
       toast.error("فشل أثناء الحفظ", {
         position: "top-left",
@@ -87,7 +96,7 @@ export default function EditFamilyPage() {
     setFamily((prev) => ({
       ...prev,
       children: prev.children.map((child, i) =>
-        i === index ? { ...child, [field]: value } : child
+        i === index ? { ...child, [field]: value } : child,
       ),
     }));
   };
@@ -176,21 +185,40 @@ export default function EditFamilyPage() {
                         <option key={key} value={key}>
                           {status}
                         </option>
-                      )
+                      ),
                     )}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    كود العائلة *
+                    كود العائلة
                   </label>
                   <input
                     type="text"
                     value={family.code || ""}
-                    onChange={(e) => handleInputChange("code", e.target.value)}
+                    disabled
+                    className="w-full px-3 py-2 border bg-gray-100 border-slate-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    المنطقة
+                  </label>
+                  <select
+                    value={family.areaName}
+                    onChange={(e) => handleInputChange("areaName",e.target.value)}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                     required
-                  />
+                  >
+                    <option value="" disabled>
+                      اختر المنطقة
+                    </option>
+                    {Object.keys(AREA_MAP).map((area) => (
+                      <option key={area} value={area}>
+                        {area}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -236,10 +264,8 @@ export default function EditFamilyPage() {
                   <input
                     type="text"
                     value={family.governate || ""}
-                    onChange={(e) =>
-                      handleInputChange("governate", e.target.value)
-                    }
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                    disabled
+                    className="w-full px-3 py-2 border border-slate-300 bg-gray-100 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                   />
                 </div>
 
@@ -268,7 +294,7 @@ export default function EditFamilyPage() {
                     onChange={(e) =>
                       handleInputChange(
                         "numberOfVisits",
-                        parseInt(e.target.value)
+                        parseInt(e.target.value),
                       )
                     }
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
@@ -321,7 +347,7 @@ export default function EditFamilyPage() {
                     onChange={(e) =>
                       handleInputChange(
                         "numberOfFamiliesInHouse",
-                        parseInt(e.target.value)
+                        parseInt(e.target.value),
                       )
                     }
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
@@ -353,7 +379,7 @@ export default function EditFamilyPage() {
                     onChange={(e) =>
                       handleInputChange(
                         "appliancesAndHouseCondition",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
@@ -670,6 +696,12 @@ export default function EditFamilyPage() {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-slate-900">
                   الأطفال
+                  <label
+                    className="w-16 items-center px-3 py-2 border border-slate-300 rounded-lg 
+               bg-slate-100 text-slate-500 cursor-not-allowed m-2"
+                  >
+                    {family.children?.length ?? 0}
+                  </label>
                 </h3>
                 <button
                   type="button"
@@ -681,7 +713,7 @@ export default function EditFamilyPage() {
                 </button>
               </div>
 
-              {family.children && family.children.length > 0 ? (
+              {family.children ? (
                 <div className="space-y-4">
                   {family.children.map((child, index) => (
                     <div
@@ -741,9 +773,7 @@ export default function EditFamilyPage() {
                             calculateAge(child.yearOfBirth) === 0 ? false : true
                           }
                           className="text-center w-full px-3 py-2 min-h-[44px] flex items-center"
-                        >
-                          ههههههههه عمرو صفر
-                        </div>
+                        ></div>
                       </div>
                     </div>
                   ))}
@@ -770,7 +800,7 @@ export default function EditFamilyPage() {
                     onChange={(e) =>
                       handleInputChange(
                         "childrenTalentsAndNeeds",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     rows={4}
@@ -807,7 +837,7 @@ export default function EditFamilyPage() {
             </div>
 
             {/* Footer */}
-        
+
             <div className="flex justify-end gap-4 pt-3 pb-3 border-t border-slate-200 sticky bottom-0 bg-white">
               <button
                 type="button"

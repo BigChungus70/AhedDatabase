@@ -43,7 +43,7 @@ const FamilyFilters = ({ filters, onFiltersChange }) => {
       areas: [], // string[]
       minAge: undefined, // number | undefined
       maxAge: undefined, // number | undefined
-      archiveOption: "Exclude", // "all" | "archived" | "exclude"
+      archiveOption: "Exclude", // "All" | "Archived" | "Exclude"
       allowedStatuses: [], // DataStatus[]
       priorityOnly: false, // boolean
       searchText: "",

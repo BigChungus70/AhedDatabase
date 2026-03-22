@@ -19,6 +19,15 @@ const LoginPage = () => {
     }));
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("expired") === "1") {
+      setError("انتهت الجلسة ، يرجى تسجيل الدخول مرة اخرى");
+      navigate("/login", { replace: true });
+    }
+  }, [location, navigate]);
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -27,11 +36,13 @@ const LoginPage = () => {
     try {
       const result = await authAPI.login(formData.username, formData.password);
 
-      
-      console.log("Login successful");
-      navigate("/"); 
+      navigate("/");
     } catch (err) {
-      setError(err.response?.data || err.message || "فشل في تسجيل الدخول");
+      setError(
+        err?.response?.data?.Message
+          ? `فشل تسجيل الدخول : ${err.response.data.Message}`
+          : "حاول في وقت لاحق"
+      );
     } finally {
       setLoading(false);
     }

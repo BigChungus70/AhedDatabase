@@ -15,6 +15,7 @@ lerna-debug.log*
 # === Local env & secrets ===
 *.local
 .env*
+nginx.conf
 
 # === Editor / OS cruft ===
 .vscode/*
@@ -28,3 +29,10 @@ lerna-debug.log*
 *.sw?
 Thumbs.db
 desktop.ini
+
+
+
+# === Package lock ===
+package-lock.json
+# yarn.lock
+# pnpm-lock.yaml

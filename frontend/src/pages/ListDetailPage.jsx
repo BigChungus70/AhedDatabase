@@ -517,7 +517,7 @@ export default function ListDetailPage() {
         </div>
         {selectedFamily && (
           <FamilyDetailCard
-            family={selectedFamily}
+            familyCode={selectedFamily}
             onClose={() => setSelectedFamily(null)}
           />
         )}

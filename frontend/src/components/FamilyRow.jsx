@@ -147,9 +147,8 @@ const FamilyRow = React.memo(
           <div className="flex gap-2 justify-center items-center">
             <button
               onClick={(e) => {
-                e.stopPropagation(); // prevent row click from firing
-                sessionStorage.setItem("scrollPosition", window.pageYOffset);
-                onView(family);
+                e.stopPropagation();
+                onView(family.code);
               }}
               className="inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 hover:text-white bg-white hover:bg-slate-700 border border-slate-300 hover:border-slate-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer whitespace-nowrap"
             >
@@ -171,37 +170,7 @@ const FamilyRow = React.memo(
           }
         `}
               >
-                {isDone ? (
-                  <CheckIcon/>
-                  // <svg
-                  //   className="w-4 h-4"
-                  //   fill="none"
-                  //   stroke="currentColor"
-                  //   viewBox="0 0 24 24"
-                  // >
-                  //   <path
-                  //     strokeLinecap="round"
-                  //     strokeLinejoin="round"
-                  //     strokeWidth={2}
-                  //     d="M5 13l4 4L19 7"
-                  //   />
-                  // </svg>
-                ) : (
-                  <Minus/>
-                  // <svg
-                  //   className="w-4 h-4"
-                  //   fill="none"
-                  //   stroke="currentColor"
-                  //   viewBox="0 0 24 24"
-                  // >
-                  //   <path
-                  //     strokeLinecap="round"
-                  //     strokeLinejoin="round"
-                  //     strokeWidth={2}
-                  //     d="M6 12h12"
-                  //   />
-                  // </svg>
-                )}
+                {isDone ? <CheckIcon /> : <Minus />}
               </button>
             )}
           </div>

@@ -1,210 +1,70 @@
 import axios from "axios";
 
-// Token management utilities
-const getAccessToken = () => localStorage.getItem("access_token");
-const getRefreshToken = () => localStorage.getItem("refresh_token");
-const getUsername = () => localStorage.getItem("username");
-
-const setusername = (username) => {
-  localStorage.setItem("username", username);
-};
-const setTokens = (accessToken, refreshToken) => {
-  localStorage.setItem("access_token", accessToken);
-  localStorage.setItem("refresh_token", refreshToken);
-};
-const clearTokens = () => {
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
-};
-const clearUsername = () => {
-  localStorage.removeItem("username");
-};
-
-// Create axios instance with default config
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
   timeout: 10000,
+  withCredentials: true,
 });
 
-// Track if we're currently refreshing to avoid multiple refresh attempts
-let isRefreshing = false;
-let failedQueue = [];
+let refreshPromise = null;
 
-const processQueue = (error, token = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-
-  failedQueue = [];
+const performRefreshTokenFlow = async () => {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = axios
+    .post(`${import.meta.env.VITE_API_URL}/auth/refresh`, null, {
+      withCredentials: true,
+    })
+    .finally(() => (refreshPromise = null));
+  return refreshPromise;
 };
 
-// Request interceptor for adding auth tokens
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = getAccessToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor for handling token refresh
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-
-    if (
-      (error.response?.status === 401 || error.response?.status === 403) &&
-      !originalRequest._retry
-    ) {
-      if (isRefreshing) {
-        // If we're already refreshing, queue this request
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return apiClient(originalRequest);
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
-      }
-
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      isRefreshing = true;
-
-      const refreshToken = getRefreshToken();
-
-      if (!refreshToken) {
-        // No refresh token available
-        clearSession();
-        window.location.href = "/login";
+      try {
+        await performRefreshTokenFlow();
+        return apiClient(originalRequest);
+      } catch {
+        window.location.href = "/login?expired=1";
         return Promise.reject(error);
       }
-
-      try {
-        // Call refresh endpoint
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-          refresh_token: refreshToken,
-        });
-
-        const newAccessToken = response.data.access_token;
-        localStorage.setItem("access_token", newAccessToken);
-
-        // Process queued requests
-        processQueue(null, newAccessToken);
-
-        // Retry original request
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return apiClient(originalRequest);
-      } catch (refreshError) {
-        // Refresh failed - both tokens are invalid
-        processQueue(refreshError, null);
-        clearTokens();
-        window.location.href = "/login";
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
     }
-
     return Promise.reject(error);
-  }
+  },
 );
 
-// Auth API Class
 class AuthAPI {
   async login(username, password) {
-    const response = await apiClient.post("/auth/login", {
+    const { data } = await apiClient.post("/auth/login", {
       username,
       password,
     });
-
-    setusername(username);
-    // Store tokens if login successful
-    if (response.data.access_token && response.data.refresh_token) {
-      setTokens(response.data.access_token, response.data.refresh_token);
-    }
-
-    return response.data;
+    localStorage.setItem("username", data.username);
+    return data;
   }
 
-  async register(username, password) {
-    const response = await apiClient.post("/auth/register", {
-      username,
-      password,
-    });
-
-    setusername(username);
-    // Store tokens if registration successful (your backend returns tokens on register)
-    if (response.data.access_token && response.data.refresh_token) {
-      setTokens(response.data.access_token, response.data.refresh_token);
-    }
-
-    return response.data;
+  async register(username, password, email) {
+    const { data } = await apiClient.post(
+      "/auth/register",
+      {
+        username,
+        password,
+        email,
+      },
+      { timeout: 60000 },
+    );
+    return data;
   }
 
   async logout() {
-    const refreshToken = localStorage.getItem("refresh_token");
     try {
-      if (refreshToken) {
-        await apiClient.post("/auth/logout", {
-          username: getUsername(),
-        });
-      }
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      this.clearSession();
-    }
-  }
-
-  async refreshToken() {
-    const refreshToken = getRefreshToken();
-
-    if (!refreshToken) {
-      throw new Error("No refresh token available");
-    }
-
-    const response = await apiClient.post("/auth/refresh", {
-      refresh_token: refreshToken,
-    });
-
-    if (response.data.access_token) {
-      localStorage.setItem("access_token", response.data.access_token);
-    }
-
-    return response.data;
-  }
-
-  // Utility methods
-  isAuthenticated() {
-    return !!getAccessToken();
-  }
-
-  getTokens() {
-    return {
-      accessToken: getAccessToken(),
-      refreshToken: getRefreshToken(),
-    };
-  }
-
-  clearSession() {
-    clearTokens();
-    clearUsername();
+      await apiClient.post("/auth/logout");
+      localStorage.removeItem("username");
+    } catch {}
   }
 }
 
@@ -278,7 +138,7 @@ class FamilyAPI {
 
   async deleteFamily(code) {
     const response = await apiClient.delete(
-      `/family/delete?familyCode=${code}`
+      `/family/delete?familyCode=${code}`,
     );
     return response.data;
   }
@@ -314,20 +174,20 @@ class SavedListAPI {
   async update(listId, name, description, campaign) {
     const response = await apiClient.patch(
       `/lists/updateList?listId=${listId}`,
-      { name, description, campaign }
+      { name, description, campaign },
     );
     return response.data;
   }
   async updateNote(entryId, newText) {
     const response = await apiClient.patch(
       `/lists/updateNotes?entryId=${entryId}`,
-      { newNotes: newText }
+      { newNotes: newText },
     );
     return response.data;
   }
   async archive(listId) {
     const response = await apiClient.patch(
-      `/lists/archiveList?listId=${listId}`
+      `/lists/archiveList?listId=${listId}`,
     );
     return response.data;
   }
@@ -340,19 +200,21 @@ class SavedListAPI {
   async addFamilies(listId, familyCodes) {
     const response = await apiClient.put(
       `/lists/addFamilies?listId=${listId}`,
-      familyCodes
+      familyCodes,
     );
     return response.data;
   }
   async toggleDone(listId, familyId) {
-    const response = await apiClient.put(`/lists/toggleDone?listId=${listId}&familyId=${familyId}`);
+    const response = await apiClient.put(
+      `/lists/toggleDone?listId=${listId}&familyId=${familyId}`,
+    );
     return response.data;
   }
 
   async removeFamilies(listId, familyCodes) {
     const response = await apiClient.put(
       `/lists/removeFamilies?listId=${listId}`,
-      familyCodes
+      familyCodes,
     );
     return response.data;
   }

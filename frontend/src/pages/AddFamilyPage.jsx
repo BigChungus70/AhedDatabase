@@ -1,22 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { Plus, Save, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
 import { familyAPI } from "../services/api";
 import {
+  AREA_MAP,
   DATA_STATUS_TRANSLATIONS,
   FAMILY_CONDITIONS,
   GOVERNORATE_MAP,
-  AREA_MAP,
 } from "../services/constants";
-import { Plus, Trash2, Save, X } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
 
 export default function AddFamilyPage() {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [selectedArea, setSelectedArea] = useState("");
   const [selectedGovernorate, setSelectedGovernorate] = useState("");
+  const [isOrphaned, setIsOrphaned] = useState(false);
 
   const [family, setFamily] = useState({
     dataStatus: "",
@@ -56,35 +57,24 @@ export default function AddFamilyPage() {
 
   const [children, setChildren] = useState([]);
 
-  // Generate code based on area and governorate selection
-  const generateCode = (area, governorate) => {
-    if (!area && !governorate) return "";
-    let governorateCode = "**";
-    let areaCode = "*";
-    if (area) {
-      areaCode = AREA_MAP[area];
-    }
-    if (governorate) {
-      governorateCode = GOVERNORATE_MAP[governorate];
-    }
-    return `${areaCode}${governorateCode}***`; // *** will be replaced by backend
-  };
-  
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
 
     try {
-      // Remove the *** from code before sending to backend
       const familyToSubmit = {
         ...family,
         code: family.code.replace("***", ""),
-        children: children, // Include children array for backend to process
+        dataStatus:
+          family.dataStatus && family.dataStatus.trim() !== ""
+            ? family.dataStatus
+            : "ok",
+        children: children,
+        childrenCount: children.length ?? 0,
       };
-      
+
       await familyAPI.addFamily(familyToSubmit);
-      toast.success("تم إضافة العائلة والأطفال بنجاح", {
+      toast.success("تم إضافة العائلة ", {
         position: "top-left",
         theme: "colored",
         closeOnClick: true,
@@ -112,19 +102,27 @@ export default function AddFamilyPage() {
     setFamily((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleAreaChange = (area) => {
-    setSelectedArea(area);
-    handleInputChange("areaName", area);
-    const newCode = generateCode(area, selectedGovernorate);
-    handleInputChange("code", newCode);
+  // AUTOMATIC CODE GENERATION
+  const generateCode = (area, governorate, orphaned) => {
+    if (!area && !governorate) return "";
+    let areaCode = AREA_MAP[area] || "*";
+    let governorateCode = GOVERNORATE_MAP[governorate] || "**";
+
+    areaCode = orphaned ? areaCode.toLowerCase() : areaCode.toUpperCase();
+
+    return `${areaCode}${governorateCode}***`;
   };
 
-  const handleGovernorateChange = (governorate) => {
-    setSelectedGovernorate(governorate);
-    handleInputChange("governate", governorate);
-    const newCode = generateCode(selectedArea, governorate);
-    handleInputChange("code", newCode);
-  };
+  useEffect(() => {
+    const newCode = generateCode(selectedArea, selectedGovernorate, isOrphaned);
+
+    setFamily((prev) => ({
+      ...prev,
+      areaName: selectedArea,
+      governate: selectedGovernorate,
+      code: newCode,
+    }));
+  }, [selectedArea, selectedGovernorate, isOrphaned]);
 
   const addChild = () => {
     const newChild = {
@@ -141,8 +139,8 @@ export default function AddFamilyPage() {
   const updateChild = (index, field, value) => {
     setChildren((prev) =>
       prev.map((child, i) =>
-        i === index ? { ...child, [field]: value } : child
-      )
+        i === index ? { ...child, [field]: value } : child,
+      ),
     );
   };
 
@@ -189,7 +187,7 @@ export default function AddFamilyPage() {
                     حالة البيانات
                   </label>
                   <select
-                    value={family.dataStatus || ""}
+                    value={family.dataStatus}
                     onChange={(e) => {
                       handleInputChange("dataStatus", e.target.value);
                     }}
@@ -203,7 +201,7 @@ export default function AddFamilyPage() {
                         <option key={key} value={key}>
                           {status}
                         </option>
-                      )
+                      ),
                     )}
                   </select>
                 </div>
@@ -214,7 +212,7 @@ export default function AddFamilyPage() {
                   </label>
                   <select
                     value={selectedArea}
-                    onChange={(e) => handleAreaChange(e.target.value)}
+                    onChange={(e) => setSelectedArea(e.target.value)}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                     required
                   >
@@ -235,7 +233,7 @@ export default function AddFamilyPage() {
                   </label>
                   <select
                     value={selectedGovernorate}
-                    onChange={(e) => handleGovernorateChange(e.target.value)}
+                    onChange={(e) => setSelectedGovernorate(e.target.value)}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                     required
                   >
@@ -248,6 +246,16 @@ export default function AddFamilyPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    ايتام
+                  </label>
+                  <input
+                    type="checkbox"
+                    checked={isOrphaned}
+                    onChange={(e) => setIsOrphaned(e.target.checked)}
+                  />
                 </div>
 
                 <div>
@@ -324,7 +332,7 @@ export default function AddFamilyPage() {
                     onChange={(e) =>
                       handleInputChange(
                         "numberOfVisits",
-                        parseInt(e.target.value)
+                        parseInt(e.target.value),
                       )
                     }
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
@@ -363,7 +371,7 @@ export default function AddFamilyPage() {
                     onChange={(e) =>
                       handleInputChange(
                         "numberOfFamiliesInHouse",
-                        parseInt(e.target.value)
+                        parseInt(e.target.value),
                       )
                     }
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
@@ -395,7 +403,7 @@ export default function AddFamilyPage() {
                     onChange={(e) =>
                       handleInputChange(
                         "appliancesAndHouseCondition",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
@@ -716,6 +724,12 @@ export default function AddFamilyPage() {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-slate-900">
                   الأطفال
+                  <label
+                    className="w-16 items-center px-3 py-2 border border-slate-300 rounded-lg 
+               bg-slate-100 text-slate-500 cursor-not-allowed m-2"
+                  >
+                    {children?.length ?? 0}
+                  </label>
                 </h3>
                 <button
                   type="button"
@@ -816,7 +830,7 @@ export default function AddFamilyPage() {
                     onChange={(e) =>
                       handleInputChange(
                         "childrenTalentsAndNeeds",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     rows={4}

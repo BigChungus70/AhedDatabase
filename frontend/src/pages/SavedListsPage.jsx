@@ -12,7 +12,7 @@ export default function SavedListsPage() {
   const [allLists, setAllLists] = useState([]);
   const [filteredLists, setFilteredLists] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [archiveOption, setArchiveOption] = useState("All");
+  const [archiveOption, setArchiveOption] = useState("Exclude");
   const [campaigns, setCampaigns] = useState([]);
   const fetchLists = async () => {
     try {

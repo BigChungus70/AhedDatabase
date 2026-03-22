@@ -1,28 +1,30 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Eye, Edit, Search } from "lucide-react";
-import {
-  FAMILY_CONDITIONS,
-  CONDITION_COLORS,
-  DATA_STATUSES_COLORS,
-} from "../services/constants";
+import { toast } from "react-toastify";
+import { savedListAPI } from "../services/api";
+import AddToListCard from "./AddToListCard";
+import CreateListCard from "./CreateListCard";
 import FamilyDetailCard from "./FamilyDetailCard";
 import FamilyRow from "./FamilyRow";
-import CreateListCard from "./CreateListCard";
-import { savedListAPI } from "../services/api";
-import { toast } from "react-toastify";
-import AddToListCard from "./AddToListCard";
 
 const FamilyTable = ({ families, loading, setRefresh }) => {
   const [createList, setCreateList] = useState(false);
   const [selectedFamily, setSelectedFamily] = useState(null);
   const [listOfFamilies, setListOfFamilies] = useState([]);
   const [addToList, setAddToList] = useState(false);
+  const totalChildren = families.reduce(
+    (sum, f) => sum + (f.childrenCount || 0),
+    0
+  );
+  
   const selectedCodesSet = useMemo(
     () => new Set(listOfFamilies),
     [listOfFamilies]
   );
+  const selectedChildren = families
+    .filter((f) => selectedCodesSet.has(f.code))
+    .reduce((sum, f) => sum + (f.childrenCount || 0), 0);
   const handleRowClick = (family) => {
     setListOfFamilies((prev) =>
       prev.includes(family.code)
@@ -232,7 +234,10 @@ const FamilyTable = ({ families, loading, setRefresh }) => {
                   الحالة
                 </th>
                 <th className="px-5 py-3 w-25 text-center text-xs font-medium text-slate-500 tracking-wider">
-                  عدد الأطفال
+                  عدد الأطفال {totalChildren}
+                  {"("}
+                  {selectedChildren}
+                  {")"}
                 </th>
                 <th className="px-6 py-3 w-15 text-center text-xs font-medium text-slate-500 tracking-wider">
                   القوائم
@@ -262,7 +267,7 @@ const FamilyTable = ({ families, loading, setRefresh }) => {
       </div>
       {selectedFamily && (
         <FamilyDetailCard
-          family={selectedFamily}
+          familyCode={selectedFamily}
           onClose={() => setSelectedFamily(null)}
         />
       )}

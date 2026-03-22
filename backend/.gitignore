@@ -1,0 +1,52 @@
+# === Java / Maven ===
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+mvnw
+mvnw.cmd
+.mvn/wrapper/maven-wrapper.properties
+
+# === IDEs ===
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+spring-boot-*.properties
+
+# === OS ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Node / Frontend ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+frontend/dist/          
+frontend/.env*.local   
+
+# === Env & secrets ===
+.env*
+*.key
+*.pem
+*.p12
+*.jks
+
+# === Logs ===
+logs/
+*.log

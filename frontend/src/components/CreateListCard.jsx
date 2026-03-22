@@ -29,7 +29,7 @@ function CreateListCard({ families, codes, onClose, onSubmit }) {
       }
     };
     fetchCampaigns();
-  });
+  }, []);
 
   // Filter families by selected codes
   const selectedFamilies = useMemo(

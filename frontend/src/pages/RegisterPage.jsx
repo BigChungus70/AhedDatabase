@@ -1,47 +1,60 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { authAPI } from "../services/api";
-
+import { Eye, EyeOff } from "lucide-react";
 
 const RegisterPage = () => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
     confirmPassword: "",
+    email: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const validateForm = () => {
-    if (!formData.username || !formData.password || !formData.confirmPassword) {
+    if (
+      !formData.username ||
+      !formData.password ||
+      !formData.confirmPassword ||
+      !formData.email
+    ) {
       setError("جميع الحقول مطلوبة");
       return false;
     }
-
     if (formData.username.length < 3) {
       setError("اسم المستخدم يجب أن يكون 3 أحرف على الأقل");
       return false;
     }
-
-    if (formData.password.length < 6) {
-      setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+    if (formData.password.length < 8) {
+      setError("كلمة المرور يجب أن تكون 8 أحرف على الأقل");
       return false;
     }
-
+    if (!/\d/.test(formData.password)) {
+      setError("كلمة المرور يجب أن تحتوي على رقم");
+      return false;
+    }
+    if (!/[a-zA-Z]/.test(formData.password)) {
+      setError("كلمة المرور يجب أن تحتوي على حرف");
+      return false; 
+    }
+    if (!/[!@#$%^&*()]/.test(formData.password)) {
+      setError("كلمة المرور يجب أن تحتوي على رمز !@#$%^&*()");
+      return false;
+    }
     if (formData.password !== formData.confirmPassword) {
       setError("كلمتا المرور غير متطابقتان");
       return false;
     }
-
     return true;
   };
 
@@ -56,20 +69,50 @@ const RegisterPage = () => {
     }
 
     try {
-      const result = await authAPI.register(
+      await authAPI.register(
         formData.username,
-        formData.password
+        formData.password,
+        formData.email,
       );
-
-      
-      console.log("Registration successful");
-      navigate("/"); 
+      setSubmitted(true);
     } catch (err) {
-      setError(err.response?.data || err.message || "فشل في إنشاء الحساب");
+      const data = err.response?.data;
+      if (data?.Message) {
+        setError("فشل إنشاء الحساب: " + data.Message);
+      } else if (typeof data === "object") {
+        setError(Object.values(data).join("، "));
+      } else {
+        setError("حدث خطأ");
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-green-100">
+        <div
+          className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 m-4 text-center"
+          dir="rtl"
+        >
+          <div className="text-emerald-600 text-5xl mb-4">✓</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            تم إرسال الطلب
+          </h2>
+          <p className="text-gray-600">
+            تم إرسال طلب إنشاء حسابك، يرجى الانتظار حتى تتم الموافقة عليه
+          </p>
+          <Link
+            to="/login"
+            className="mt-6 inline-block text-emerald-600 hover:underline font-medium"
+          >
+            العودة لتسجيل الدخول
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-green-100">
@@ -77,20 +120,16 @@ const RegisterPage = () => {
         className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 m-4"
         dir="rtl"
       >
-        {/* Header */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900">إنشاء حساب جديد</h2>
-          <p className="text-gray-600 mt-2">انضم إلينا اليوم</p>
         </div>
 
-        {/* Error Message */}
         {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-700 text-sm text-right">{error}</p>
           </div>
         )}
 
-        {/* Register Form */}
         <div className="space-y-6">
           <div>
             <label
@@ -113,21 +152,49 @@ const RegisterPage = () => {
 
           <div>
             <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-2 text-right"
+            >
+              البريد الإلكتروني
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors ltr "
+              placeholder="example@email.com"
+            />
+          </div>
+
+          <div>
+            <label
               htmlFor="password"
               className="block text-sm font-medium text-gray-700 mb-2 text-right"
             >
               كلمة المرور
             </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors text-right"
-              placeholder="اختر كلمة مرور"
-            />
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                required
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors text-right"
+                placeholder="اختر كلمة مرور"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <div>
@@ -137,16 +204,25 @@ const RegisterPage = () => {
             >
               تأكيد كلمة المرور
             </label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              required
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors text-right"
-              placeholder="أعد كتابة كلمة المرور"
-            />
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                required
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors text-right"
+                placeholder="أعد كتابة كلمة المرور"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <button
@@ -176,7 +252,7 @@ const RegisterPage = () => {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                جاري إنشاء الحساب...
+                جاري إرسال الطلب...
               </span>
             ) : (
               "إنشاء حساب"
@@ -184,7 +260,6 @@ const RegisterPage = () => {
           </button>
         </div>
 
-        {/* Login Link */}
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             لديك حساب بالفعل؟{" "}

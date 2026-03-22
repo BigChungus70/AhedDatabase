@@ -18,7 +18,7 @@ const FamiliesPage = () => {
     areas: [], // string[]
     minAge: undefined, // number | undefined
     maxAge: undefined, // number | undefined
-    archiveOption: "Exclude", // "all" | "archived" | "exclude"
+    archiveOption: "Exclude", // "All" | "Archived" | "Exclude"
     allowedStatuses: [], // DataStatus[]
     priorityOnly: false, // boolean
     searchText: "",
@@ -28,20 +28,13 @@ const FamiliesPage = () => {
     loadFamilies();
   }, [filters, refresh]);
 
-  const handleScrollPosition = () => {
-    const scrollPosition = sessionStorage.getItem("scrollPosition");
-    if (scrollPosition) {
-      window.scrollTo(0, parseInt(scrollPosition));
-      sessionStorage.removeItem("scrollPosition");
-    }
-  };
 
   const loadFamilies = async () => {
     try {
       setLoading(true);
       const data = await familyAPI.searchFamilies(filters);
       setFamilies(data);
-      handleScrollPosition();
+     
     } catch (error) {
       console.error("Error loading families:", error);
     } finally {
@@ -49,6 +42,32 @@ const FamiliesPage = () => {
       setRefresh(false);
     }
   };
+
+  // //TODO: remove
+  // if (families.length === 0) {
+  //   setFamilies([
+  //     {
+  //       code: "mock1",
+  //       parents: "mock parents",
+  //       childrenCount: 1,
+  //     },
+  //     {
+  //       code: "mock2",
+  //       parents: "mock parents",
+  //       childrenCount: 2,
+  //     },
+  //     {
+  //       code: "mock3",
+  //       parents: "mock parents",
+  //       childrenCount: 3,
+  //     },
+  //     {
+  //       code: "mock4",
+  //       parents: "mock parents",
+  //       childrenCount: 4,
+  //     },
+  //   ])
+  // }
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-6">

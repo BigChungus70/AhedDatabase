@@ -17,6 +17,7 @@ import {
   User,
   Copy,
   WrenchIcon,
+  Loader,
 } from "lucide-react";
 import {
   FAMILY_CONDITIONS,
@@ -24,12 +25,27 @@ import {
   DATA_STATUS_TRANSLATIONS,
 } from "../services/constants";
 import { toast, ToastContainer } from "react-toastify";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { familyAPI } from "../services/api";
 
-const FamilyDetailCard = ({ family, onClose }) => {
+const FamilyDetailCard = ({ familyCode, onClose }) => {
   const navigate = useNavigate();
+  const [family, setFamily] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadFamily = async () => {
+    try {
+      const response = await familyAPI.getByCode(familyCode);
+      setFamily(response);
+    } catch (error) {
+      console.error("Error fetching family:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
+    loadFamily();
     const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -70,6 +86,14 @@ const FamilyDetailCard = ({ family, onClose }) => {
     if (!numbersString) return [];
     return numbersString.split("\n").filter((num) => num.trim());
   };
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-gray-200 flex items-center justify-center p-4 z-50">
+        <Loader className="animate-spin" />
+      </div>
+    );
+  }
   return (
     <div className="fixed inset-0 bg-gray-200 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto">
