@@ -96,12 +96,12 @@ const RegisterPage = () => {
           className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 m-4 text-center"
           dir="rtl"
         >
-          <div className="text-emerald-600 text-5xl mb-4">✓</div>
+          <div className="text-emerald-600 text-5xl mb-4">...</div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            تم إرسال الطلب
+            تأكيد ملكية البريد الالكتروني
           </h2>
           <p className="text-gray-600">
-            تم إرسال طلب إنشاء حسابك، يرجى الانتظار حتى تتم الموافقة عليه
+            تم إرسال رابط تحقق إلى البريد الالكتروني
           </p>
           <Link
             to="/login"

@@ -9,11 +9,13 @@ public record SavedListSummaryDTO(
         Long id,
         String name,
         String description,
+        String report,
         int familyCount,
         boolean archived,
         LocalDate createdDate,
         LocalDateTime lastModified,
         Integer doneCount,
         Campaign campaign
+
 ) {
 }

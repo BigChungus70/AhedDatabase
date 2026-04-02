@@ -1,10 +1,11 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { Users, Archive, List } from "lucide-react";
 import { familyAPI, savedListAPI } from "../services/api";
+import { useRole, isAtLeast } from "../hooks/useRole";
 
 const DashboardStats = () => {
+  const role = useRole();
+
   const [stats, setStats] = useState({
     totalFamilies: 0,
     nonArchivedFamilies: 0,
@@ -12,29 +13,30 @@ const DashboardStats = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  // Only High+ can see stats — don't even fetch for others
+  if (!isAtLeast(role, "High")) return null;
+
   useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const [totalCount, nonArchivedCount, listsCount] = await Promise.all([
+          familyAPI.getFamilyCount(),
+          familyAPI.getNonArchivedFamilyCount(),
+          savedListAPI.getCount(),
+        ]);
+        setStats({
+          totalFamilies: totalCount,
+          nonArchivedFamilies: nonArchivedCount,
+          savedLists: listsCount,
+        });
+      } catch (error) {
+        console.error("Error loading stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     loadStats();
   }, []);
-
-  const loadStats = async () => {
-    try {
-      const [totalCount, nonArchivedCount, listsCount] = await Promise.all([
-        familyAPI.getFamilyCount(),
-        familyAPI.getNonArchivedFamilyCount(),
-        savedListAPI.getCount(),
-      ]);
-
-      setStats({
-        totalFamilies: totalCount,
-        nonArchivedFamilies: nonArchivedCount,
-        savedLists: listsCount,
-      });
-    } catch (error) {
-      console.error("Error loading stats:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const statsCards = [
     {
@@ -66,8 +68,8 @@ const DashboardStats = () => {
         {[1, 2, 3].map((i) => (
           <div key={i} className="bg-white rounded-lg shadow-md p-6">
             <div className="animate-pulse">
-              <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
-              <div className="h-8 bg-slate-200 rounded w-1/2"></div>
+              <div className="h-4 bg-slate-200 rounded w-3/4 mb-2" />
+              <div className="h-8 bg-slate-200 rounded w-1/2" />
             </div>
           </div>
         ))}

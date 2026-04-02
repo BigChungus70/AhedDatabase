@@ -1,6 +1,7 @@
 package backend.repository;
 
 import backend.model.UserAhed;
+import backend.model.enums.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,6 +20,8 @@ public interface UserRepository extends JpaRepository<UserAhed, Long> {
 
     @Query("SELECT u.enabled FROM UserAhed u WHERE u.username = :username")
     Boolean isEnabled(String username);
+
+    List<UserAhed> findAllByRoleNot(UserRole role);
 
 
     @Query("SELECT u.id FROM UserAhed u")

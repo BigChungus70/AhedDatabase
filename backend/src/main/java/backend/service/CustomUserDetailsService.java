@@ -4,10 +4,12 @@ import backend.model.DTO.IpLocationDTO;
 import backend.model.DTO.UserLoginDTO;
 import backend.model.DTO.UserRegisterDTO;
 import backend.model.PendingUser;
+import backend.model.UnverifiedUser;
 import backend.model.UserAhed;
 import backend.model.enums.ExpirationDates;
 import backend.model.enums.UserRole;
 import backend.repository.PendingUserRepository;
+import backend.repository.UnverifiedUserRepository;
 import backend.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,6 +42,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepo;
     private final PendingUserRepository pendingRepo;
+    private final UnverifiedUserRepository unverifiedRepo;
     private final PasswordEncoder passwordEncoder;
     private final JWTService jwtService;
     private final MailService mailService;
@@ -69,31 +72,64 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Transactional
     public ResponseEntity<?> registerUser(UserRegisterDTO toRegister, HttpServletRequest request) {
-        if (existsByUsername(toRegister.username())) {
-            throw new IllegalArgumentException("يوجد حساب آخر بهذا الاسم");
-        }
-        if (pendingExistsByUsername(toRegister.username())) {
-            throw new IllegalArgumentException("يوجد طلب حساب بهذا الاسم قيد الانتظار");
-        }
-        if (existsByEmail(toRegister.email())) {
-            throw new IllegalArgumentException("يوجد حساب آخر بهذا البريد الإلكتروني");
-        }
-        if (pendingExistsByEmail(toRegister.email())) {
-            throw new IllegalArgumentException("يوجد طلب حساب بهذا البريد الإلكتروني قيد الانتظار");
-        }
+        if (existsByUsername(toRegister.username()))
+            throw new IllegalArgumentException("اسم المستخدم غير متاح");
+        if (pendingExistsByUsername(toRegister.username()))
+            throw new IllegalArgumentException("اسم المستخدم غير متاح");
+        if (unverifiedExistsByUsername(toRegister.username()))
+            throw new IllegalArgumentException("اسم المستخدم غير متاح");
+        if (existsByEmail(toRegister.email()))
+            throw new IllegalArgumentException("البريد الإلكتروني مرتبط بحساب آخر");
+        if (pendingExistsByEmail(toRegister.email()))
+            throw new IllegalArgumentException("البريد الإلكتروني مرتبط بحساب آخر");
+        if (unverifiedExistsByEmail(toRegister.email()))
+            throw new IllegalArgumentException("البريد الإلكتروني مرتبط بحساب آخر");
 
+        UnverifiedUser unverified = new UnverifiedUser();
+        unverified.setUsername(toRegister.username());
+        unverified.setPassword(passwordEncoder.encode(toRegister.password()));
+        unverified.setEmail(toRegister.email());
+        unverified.setToken(UUID.randomUUID().toString());
+        unverified.setCreatedAt(LocalDateTime.now());
+
+        IpLocationDTO registrationLocation = getClientIpLocation(request);
+        unverified.setRegistrationIp(registrationLocation.query());
+        unverified.setRegistrationCountry(registrationLocation.country());
+        unverified.setRegistrationRegion(registrationLocation.regionName());
+        unverified.setRegistrationCity(registrationLocation.city());
+
+        unverifiedRepo.save(unverified);
+        mailService.sendVerificationEmail(unverified.getEmail(), unverified.getUsername(), unverified.getToken());
+
+        return ResponseEntity.ok(Map.of("Message", "تم إرسال رابط التحقق إلى بريدك الإلكتروني"));
+    }
+
+    @Transactional
+    public ResponseEntity<?> verifyEmail(String token, HttpServletRequest request) {
+        UnverifiedUser unverified = unverifiedRepo.findByToken(token);
+
+        if (unverified == null)
+            throw new IllegalArgumentException("الرابط غير صالح");
+        if (unverified.getCreatedAt().isBefore(LocalDateTime.now().minusMinutes(15))) {
+            unverifiedRepo.delete(unverified);
+            throw new IllegalArgumentException("انتهت صلاحية الرابط");
+        }
 
         PendingUser pending = new PendingUser();
-        pending.setUsername(toRegister.username());
-        pending.setPassword(passwordEncoder.encode(toRegister.password()));
-        pending.setEmail(toRegister.email());
+        pending.setUsername(unverified.getUsername());
+        pending.setPassword(unverified.getPassword());
+        pending.setEmail(unverified.getEmail());
         pending.setToken(UUID.randomUUID().toString());
         pending.setCreatedAt(LocalDateTime.now());
-        IpLocationDTO location = getClientIpLocation(request);
+
+        IpLocationDTO verificationLocation = getClientIpLocation(request);
+        unverifiedRepo.delete(unverified);
         pendingRepo.save(pending);
-        mailService.sendApprovalRequestEmail(pending, location);
-        return ResponseEntity.ok(Map.of("Message", "تم إرسال طلب إنشاء الحساب، يرجى الانتظار حتى تتم الموافقة"));
+        mailService.sendApprovalRequestEmail(pending, unverified, verificationLocation);
+
+        return ResponseEntity.ok(Map.of("Message", "تم تأكيد بريدك الإلكتروني، سيتم مراجعة طلبك قريباً"));
     }
+
 
     public ResponseEntity<?> loginUser(UserLoginDTO dto, HttpServletResponse response) {
         UserAhed userAhed = userRepo.findByUsername(dto.username())
@@ -112,7 +148,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         setCookie(response, "access_token", accessToken, ExpirationDates.accessTokenExpirationDate, accessCookiePath);
         setCookie(response, "refresh_token", refreshToken, ExpirationDates.refreshTokenExpirationDate, refreshTokenCookiePath);
 
-        return ResponseEntity.ok(Map.of("Message", "تم تسجيل الدخول بنجاح", "username", userAhed.getUsername()));
+        return ResponseEntity.ok(Map.of(
+                "Message", "تم تسجيل الدخول بنجاح",
+                "username", userAhed.getUsername(),
+                "role", userAhed.getRole().name()));
     }
 
     public ResponseEntity<?> logoutUser(HttpServletRequest request, HttpServletResponse response) {
@@ -150,7 +189,8 @@ public class CustomUserDetailsService implements UserDetailsService {
             user.setUsername(pending.getUsername());
             user.setPassword(pending.getPassword());
             user.setEmail(pending.getEmail());
-            user.setRole(UserRole.Normal);
+            user.setRole(UserRole.Low);
+            user.setSlot(false);
             user.setEnabled(true);
             userRepo.save(user);
             pendingRepo.delete(pending);
@@ -163,9 +203,6 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new IllegalArgumentException("قرار غير صالح");
         }
     }
-
-
-
 
 
     private void setCookie(HttpServletResponse response, String name, String value, long expirationMs, String path) {
@@ -198,12 +235,22 @@ public class CustomUserDetailsService implements UserDetailsService {
         return pendingRepo.findByUsername(username).isPresent();
     }
 
-    public boolean existsByEmail(String email){
+    public boolean unverifiedExistsByUsername(String username) {
+        return unverifiedRepo.findByUsername(username).isPresent();
+    }
+
+    public boolean existsByEmail(String email) {
         return userRepo.findByEmail(email).isPresent();
     }
-    public boolean pendingExistsByEmail(String email){
+
+    public boolean pendingExistsByEmail(String email) {
         return pendingRepo.findByEmail(email).isPresent();
     }
+
+    public boolean unverifiedExistsByEmail(String email) {
+        return unverifiedRepo.findByEmail(email).isPresent();
+    }
+
 
     private IpLocationDTO getClientIpLocation(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");

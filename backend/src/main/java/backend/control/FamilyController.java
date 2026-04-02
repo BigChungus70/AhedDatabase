@@ -11,21 +11,22 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/family")
+@RequestMapping("/families")
+@PreAuthorize("hasAnyAuthority('ROLE_Admin', 'ROLE_High')")
 public class FamilyController {
 
     private final FamilyService familyService;
 
-    @GetMapping("/listAll")
-    public ResponseEntity<List<Family>> getAll() {
+    @GetMapping
+    public ResponseEntity<List<Family>> getAllFamilies() {
         return ResponseEntity.ok(familyService.getAllFamilies());
     }
 
-    @GetMapping("/getFamily")
-    public ResponseEntity<Family> getFamilyByCode(@RequestParam String code) {
+    @GetMapping("/{code}")
+    @PreAuthorize("hasAnyAuthority('ROLE_Admin', 'ROLE_High', 'ROLE_Mid')")
+    public ResponseEntity<Family> getFamily(@PathVariable String code) {
         return ResponseEntity.ok(familyService.getFamily(code));
     }
 
@@ -44,30 +45,30 @@ public class FamilyController {
         return ResponseEntity.ok(families);
     }
 
-    @GetMapping("/allCount")
+    @GetMapping("/count")
     public ResponseEntity<Long> getFamilyCount() {
         return ResponseEntity.ok(familyService.getAllFamiliesCount());
     }
 
-    @GetMapping("/nonArchivedCount")
+    @GetMapping("/count/active")
     public ResponseEntity<Long> getNonArchivedFamilyCount() {
         return ResponseEntity.ok(familyService.getAllNonArchivedFamiliesCount());
     }
 
-    @PutMapping("/update")
+    @PutMapping("/{code}")
+    @PreAuthorize("hasAnyAuthority('ROLE_Admin', 'ROLE_High', 'ROLE_Mid')")
     public ResponseEntity<Family> updateFamily(@RequestBody Family family) {
         return ResponseEntity.ok(familyService.updateFamily(family));
     }
 
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<Family> addFamily(@RequestBody Family family) {
         return ResponseEntity.ok(familyService.saveFamily(family));
     }
 
-    @DeleteMapping("/delete")
+    @DeleteMapping("/{code}")
     @PreAuthorize("hasAuthority('ROLE_Admin')")
-    public ResponseEntity<Family> deleteFamily(@RequestParam String code) {
+    public ResponseEntity<Family> deleteFamily(@PathVariable String code) {
         return ResponseEntity.ok(familyService.deleteFamily(code));
     }
-
 }

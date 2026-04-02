@@ -43,32 +43,6 @@ const FamiliesPage = () => {
     }
   };
 
-  // //TODO: remove
-  // if (families.length === 0) {
-  //   setFamilies([
-  //     {
-  //       code: "mock1",
-  //       parents: "mock parents",
-  //       childrenCount: 1,
-  //     },
-  //     {
-  //       code: "mock2",
-  //       parents: "mock parents",
-  //       childrenCount: 2,
-  //     },
-  //     {
-  //       code: "mock3",
-  //       parents: "mock parents",
-  //       childrenCount: 3,
-  //     },
-  //     {
-  //       code: "mock4",
-  //       parents: "mock parents",
-  //       childrenCount: 4,
-  //     },
-  //   ])
-  // }
-
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">

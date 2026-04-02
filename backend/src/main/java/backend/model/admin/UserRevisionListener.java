@@ -1,4 +1,4 @@
-package backend.model.audit;
+package backend.model.admin;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.hibernate.envers.RevisionListener;

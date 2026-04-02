@@ -21,4 +21,7 @@ public interface ChildrenRepository extends JpaRepository<Children, Long> {
 
     @Query("SELECT C FROM Children C WHERE C.family.code = :familyCode")
     List<Children> findByFamilyCode(@Param("familyCode") String familyCode);
+
+    @Query("SELECT c FROM Children c WHERE c.family.id IN :familyIds")
+    List<Children> findByFamilyIds(@Param("familyIds") List<Long> familyIds);
 }

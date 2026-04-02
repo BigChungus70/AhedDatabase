@@ -29,6 +29,9 @@ public class SavedList {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(columnDefinition = "TEXT")
+    private String report;
+
     private boolean archived;
     private LocalDate createdDate;
     private LocalDateTime lastModified;

@@ -1,6 +1,7 @@
 package backend.repository;
 
 import backend.model.JWT;
+import backend.model.UserAhed;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -21,4 +22,6 @@ public interface JWTRepository extends JpaRepository<JWT, Long> {
     @Modifying
     @Query("DELETE FROM JWT rt WHERE rt.expiresAt < :now")
     void deleteAllExpired(Instant now);
+
+    void deleteAllByUser(UserAhed user);
 }

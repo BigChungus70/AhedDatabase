@@ -14,6 +14,7 @@ public record SavedListDetailsDTO(
         Long id,
         String name,
         String description,
+        String report,
         boolean archived,
         LocalDate createdDate,
         LocalDateTime lastModified,

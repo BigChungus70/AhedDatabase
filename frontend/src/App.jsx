@@ -1,7 +1,8 @@
 import {
   Route,
   BrowserRouter as Router,
-  Routes
+  Routes,
+  Navigate,
 } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "./App.css";
@@ -13,8 +14,8 @@ import ListDetailPage from "./pages/ListDetailPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import SavedListsPage from "./pages/SavedListsPage";
-
-
+import AdminPage from "./pages/AdminPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -23,13 +24,64 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/lists"
+            element={
+              <ProtectedRoute>
+                <SavedListsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/lists/:id"
+            element={
+              <ProtectedRoute>
+                <ListDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/families/edit/:code"
+            element={
+              <ProtectedRoute minRole="Mid">
+                <EditFamilyPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/families"
+            element={
+              <ProtectedRoute minRole="High">
+                <FamiliesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/addFamily"
+            element={
+              <ProtectedRoute minRole="High">
+                <AddFamilyPage />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/families" element={<FamiliesPage />} />
-          <Route path="/addFamily" element={<AddFamilyPage />} />
-          <Route path="/families/edit/:code" element={<EditFamilyPage />} />
-          <Route path="/lists" element={<SavedListsPage />} />
-          <Route path="/lists/:id" element={<ListDetailPage />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute minRole="Admin">
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>
       <ToastContainer />

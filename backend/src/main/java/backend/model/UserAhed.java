@@ -23,12 +23,15 @@ public class UserAhed {
     @Column(nullable = false)
     private String password;
 
-    @Column(unique = true)
+    @Column(unique = true , nullable = false)
     @Email
     private String email;
 
     @Enumerated(EnumType.STRING)
     private UserRole role;
+
+    @Column(nullable = false)
+    private Boolean slot;
 
     private LocalDateTime lastAccess;
 

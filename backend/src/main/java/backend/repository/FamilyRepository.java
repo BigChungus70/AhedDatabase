@@ -34,4 +34,7 @@ public interface FamilyRepository extends
     @Query("SELECT MAX(CAST(SUBSTRING(f.code, 4, 3) AS int)) FROM Family f")
     Integer findMaxSequence();
 
+    @Query("SELECT COUNT(e) > 0 FROM ListEntry e WHERE e.family.code = :code AND e.savedList.archived = false")
+    boolean existsInActiveList(@Param("code") String code);
+
 }

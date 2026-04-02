@@ -1,11 +1,14 @@
 package backend.config;
 
 import jakarta.mail.MessagingException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailAuthenticationException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,11 +23,16 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.badRequest().body(errors);
     }
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public  ResponseEntity<Map<String, String>> handleAuthorizationDenied(AuthorizationDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("Message","لا يسمح لك بالقيام بهذا"));
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegal(IllegalArgumentException ex) {
         return ResponseEntity.badRequest().body(Map.of("Message", ex.getMessage()));
     }
+
 
     @ExceptionHandler(MailAuthenticationException.class)
     public ResponseEntity<Map<String, String>> handleMailAuth(MailAuthenticationException ex) {

@@ -1,9 +1,9 @@
-package backend.service.audit;
+package backend.service.admin;
 
 import backend.model.UserAhed;
-import backend.model.audit.FieldChange;
-import backend.model.audit.UserAhedAuditDTO;
-import backend.model.audit.CustomRevisionEntity;
+import backend.model.admin.FieldChange;
+import backend.model.admin.UserAhedAuditDTO;
+import backend.model.admin.CustomRevisionEntity;
 import backend.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;

@@ -34,6 +34,11 @@ public class AuthorizationController {
         return userService.registerUser(user, request);
     }
 
+    @GetMapping("/verify")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token, HttpServletRequest request) {
+        return userService.verifyEmail(token, request);
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody UserLoginDTO user, HttpServletResponse response) {
         return userService.loginUser(user, response);

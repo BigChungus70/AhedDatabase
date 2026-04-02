@@ -1,16 +1,19 @@
 package backend.service;
 
+import backend.config.SecurityUtils;
 import backend.model.Children;
 import backend.model.Family;
 import backend.model.enums.ArchiveOption;
 import backend.model.enums.DataStatus;
 import backend.model.enums.FamilyCondition;
+import backend.model.enums.UserRole;
 import backend.repository.FamilyRepository;
 import backend.repository.FamilySpecifications;
 import backend.repository.SavedListRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +36,11 @@ public class FamilyService {
     }
 
     public Family getFamily(String code) {
-        return familyRepo.getFamilyByCode(code);
+        Family family = familyRepo.getFamilyByCode(code);
+        if (!SecurityUtils.getCurrentUserRole().hasAtLeast(UserRole.High) && !familyRepo.existsInActiveList(code)) {
+            throw new AuthorizationDeniedException("Access Denied");
+        }
+        return family;
     }
 
     private List<Family> filterFamilies(boolean filterByLowercaseFirstLetter,
@@ -108,6 +115,10 @@ public class FamilyService {
     public Family updateFamily(Family family) {
         Family existing = familyRepo.findById(family.getId())
                 .orElseThrow(() -> new RuntimeException("Family not found"));
+
+        if (!SecurityUtils.getCurrentUserRole().hasAtLeast(UserRole.High) && !familyRepo.existsInActiveList(existing.getCode())) {
+            throw new AuthorizationDeniedException("Access Denied");
+        }
 
         // copy fields except ID and children
         org.springframework.beans.BeanUtils.copyProperties(family, existing, "id", "children");

@@ -1,4 +1,4 @@
-package backend.model.audit;
+package backend.model.admin;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

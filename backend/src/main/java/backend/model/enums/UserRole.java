@@ -1,12 +1,13 @@
 package backend.model.enums;
 
 public enum UserRole {
-    Normal,
-    Elevated,
-    Admin;
+    Admin,
+    High,
+    Mid,
+    Low;
 
     public boolean hasAtLeast(UserRole required) {
-        return this.ordinal() >= required.ordinal();
+        return this.ordinal() <= required.ordinal();
     }
 
     public String asAuthority() {

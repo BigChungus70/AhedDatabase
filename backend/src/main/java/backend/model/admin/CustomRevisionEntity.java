@@ -1,4 +1,4 @@
-package backend.model.audit;
+package backend.model.admin;
 
 import jakarta.persistence.*;
 import lombok.Getter;
