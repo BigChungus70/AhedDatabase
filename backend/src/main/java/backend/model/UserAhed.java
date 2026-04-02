@@ -23,7 +23,7 @@ public class UserAhed {
     @Column(nullable = false)
     private String password;
 
-    @Column(unique = true , nullable = false)
+    @Column(unique = true)
     @Email
     private String email;
 
