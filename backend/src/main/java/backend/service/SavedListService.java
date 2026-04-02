@@ -121,7 +121,7 @@ public class SavedListService {
     public byte[] exportList(Long listId, boolean residence, boolean children, Integer minDOB, Integer maxDOB) {
         SavedList list = listRepo.findWithEntriesById(listId)
                 .orElseThrow(() -> new EntityNotFoundException("List not found"));
-        if (list.isArchived()) {
+        if (list.isArchived() && !SecurityUtils.getCurrentUserRole().hasAtLeast(UserRole.High)) {
             throw new IllegalArgumentException("List is archived");
         }
 
