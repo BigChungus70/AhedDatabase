@@ -149,7 +149,11 @@ public class SavedListService {
         conditionTranslation.put(FamilyCondition.dontForget, "لا تنسى");
 
         try (Workbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet(list.getName());
+            String sheetName = list.getName()
+                    .replaceAll("[/\\\\*?\\[\\]:]", "-")
+                    .trim();
+            if (sheetName.length() > 31) sheetName = sheetName.substring(0, 31);
+            Sheet sheet = workbook.createSheet(sheetName);
             sheet.setRightToLeft(true);
 
             // header style

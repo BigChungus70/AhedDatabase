@@ -248,8 +248,8 @@ class SavedListAPI {
     { residence = false, children = false, minDOB = null, maxDOB = null } = {},
   ) {
     const params = new URLSearchParams({ residence, children });
-    if (minDOB) params.append("minDOB", minDOB);
-    if (maxDOB) params.append("maxDOB", maxDOB);
+    if (minDOB != null) params.append("minDOB", minDOB);
+    if (maxDOB != null) params.append("maxDOB", maxDOB);
 
     const response = await apiClient.get(
       `/lists/${listId}/export?${params.toString()}`,
